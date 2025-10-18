@@ -40,7 +40,7 @@ const CreateListing = () => {
         setFormData(data);
     }
     fetchListing();
-  }, [])
+  }, [params.listingId])
 
   const handleImageSubmit = () => {
     if (file.length > 0 && file.length + formData.imageUrls.length < 7) {
