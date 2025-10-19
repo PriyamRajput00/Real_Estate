@@ -13,7 +13,9 @@ const Contact = ({ listing }) => {
   useEffect(() => {
     const fetchLandlord = async () => {
       try {
-        const response = await fetch(`/api/user/${listing.userRef}`);
+        const response = await fetch(`/api/user/${listing.userRef}`, {
+          credentials: 'include',
+        });
         if (!response.ok) {
           throw new Error("Failed to fetch landlord");
         }
