@@ -1,60 +1,58 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-
-console.log('1. Core imports loaded');
-
 import userRouter from './routes/user.route.js';
-console.log('2. User router imported');
-
 import authRouter from './routes/auth.route.js';
-console.log('3. Auth router imported');
-
 import listingRouter from './routes/listing.route.js';
-console.log('4. Listing router imported');
-
 import cookieParser from 'cookie-parser';
-import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-console.log('5. All imports successful');
-
+// Load environment variables
 dotenv.config();
 
+// Connect to MongoDB
 mongoose.connect(process.env.MONGO).then(() => {
-  console.log('Connected to MongoDB!');
+  console.log('✅ Connected to MongoDB!');
 }).catch((err) => {
-  console.error('Error connecting to MongoDB', err);
+  console.error('❌ Error connecting to MongoDB:', err);
 });
 
+// Define __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Initialize Express app
 const app = express();
 
-app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials: true
-}));
-
+// Core middleware
 app.use(express.json());
 app.use(cookieParser());
 
-// Routes
+// API routes
 app.use('/api/user', userRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/listing', listingRouter);
 
-// Serve static files from the React app build directory
-app.use(express.static(path.join(__dirname, '../client/dist')));
 
-// Catch all handler: send back React's index.html file for any non-API routes
+// --- Production Setup: Serve React Frontend ---
+
+// 1. Define the path to the built frontend
+const distPath = path.join(__dirname, '../client/dist');
+
+// 2. Serve static files (JS, CSS, images) from the React app's build directory
+app.use(express.static(distPath));
+
+// 3. "Catch-all" middleware: For any request that doesn't match the above,
+//    send back the main index.html file.
 app.use((req, res) => {
-  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
-// Middleware
+// --- End of Production Setup ---
+
+
+// Error handling middleware (must be the last app.use() call)
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Internal Server Error';
@@ -65,6 +63,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(3000, () => {
-  console.log('Server is running on port 3000');
+// Start the server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server is running on port ${PORT}`);
 });
